@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple POS System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="alerts"></div>
+
+  <!-- Login Section -->
+  <section id="login-section" class="login-container" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #2c3e50, #3498db);">
+    <div class="card" style="width: 100%; max-width: 400px; background-color: white;">
+      <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Simple POS System</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="Enter username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn" style="width: 100%; font-size: 16px;">Login</button>
+      </form>
+      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ecf0f1; font-size: 14px; color: #7f8c8d;">
+        <p><strong>Demo Credentials:</strong></p>
+        <p>Admin: admin / admin123</p>
+        <p>Cashier: cashier / cashier123</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Application Section -->
+  <div id="app-section" style="display: none;">
+    <!-- Header -->
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <h1>Simple POS System</h1>
+          <div class="user-info">
+            <span>Welcome, <strong id="current-user"></strong></span>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Navigation -->
+      <nav>
+        <button data-section="dashboard" class="active">Dashboard</button>
+        <button data-section="products">Products</button>
+        <button data-section="sales">Make Sale</button>
+        <button data-section="history">Sales History</button>
+      </nav>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="section active">
+        <div class="card">
+          <h2>Dashboard</h2>
+          <button id="refresh-dashboard" class="btn">Refresh</button>
+
+          <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="stat-card success">
+              <h3>Today's Sales Count</h3>
+              <div class="value" id="today-sales">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Today's Total Revenue</h3>
+              <div class="value" id="today-total">0</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 20px;">
+            <h2>Current Stock</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody id="stock-table">
+                <tr><td colspan="2">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products Section -->
+      <section id="products-section" class="section">
+        <div class="card">
+          <h2>Products Management</h2>
+          <button id="add-product-btn" class="btn btn-success">Add New Product</button>
+
+          <table style="margin-top: 20px;">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="products-table">
+              <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Make Sale Section -->
+      <section id="sales-section" class="section">
+        <div class="cart-section">
+          <div>
+            <div class="card">
+              <h2>Search Product</h2>
+              <div class="search-container">
+                <div class="search-input" style="position: relative;">
+                  <input type="text" id="search-product" placeholder="Search for a product..." autocomplete="off">
+                  <div id="search-results" class="search-results"></div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Selected Product</label>
+                <input type="hidden" id="selected-product-id">
+                <input type="text" id="selected-product-name" readonly placeholder="Select a product">
+              </div>
+
+              <div class="form-group">
+                <label>Price</label>
+                <input type="text" id="selected-product-price" readonly placeholder="0">
+              </div>
+
+              <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="product-quantity" value="1" min="1">
+              </div>
+
+              <button id="add-to-cart-btn" class="btn btn-success">Add to Cart</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <h2>Cart & Checkout</h2>
+              <div id="cart-items" class="cart-items">
+                <div class="empty-state">
+                  <p>Cart is empty</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <div class="form-group">
+                  <label>Total Amount</label>
+                  <div style="font-size: 24px; font-weight: bold; color: #27ae60; padding: 10px; background-color: #ecf0f1; border-radius: 4px;">
+                    <span id="total-amount">0</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Amount Paid</label>
+                  <input type="number" id="amount-paid" placeholder="Enter amount paid" min="0">
+                </div>
+
+                <div class="form-group">
+                  <label>Change</label>
+                  <div style="font-size: 20px; font-weight: bold; color: #3498db; padding: 10px; background-color: #ecf0f1; border-radius: 4px;">
+                    <span id="change">0</span>
+                  </div>
+                </div>
+
+                <button id="complete-sale-btn" class="btn btn-success" style="width: 100%; font-size: 16px; padding: 12px;">Complete Sale</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sales History Section -->
+      <section id="history-section" class="section">
+        <div class="card">
+          <h2>Sales History</h2>
+          <button id="refresh-sales-history" class="btn">Refresh</button>
+
+          <table style="margin-top: 20px;">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Cashier</th>
+                <th>Total Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="sales-history-table">
+              <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Product Modal -->
+  <div id="product-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="product-modal-title">Add Product</h2>
+        <button id="close-product-modal" class="close-btn">&times;</button>
+      </div>
+
+      <form id="product-form" onsubmit="event.preventDefault(); saveProduct();">
+        <input type="hidden" id="product-id">
+
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" id="product-name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" id="product-price" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="product-quantity" required>
+        </div>
+
+        <button type="submit" id="save-product-btn" class="btn btn-success" style="width: 100%;">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sale Details Modal -->
+  <div id="sale-details-modal" class="modal">
+    <div class="modal-content">
+      <div id="sale-details-content"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
