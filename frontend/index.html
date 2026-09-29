@@ -55,6 +55,7 @@
         <button data-section="products">Products</button>
         <button data-section="sales">Make Sale</button>
         <button data-section="history">Sales History</button>
+        <button data-section="users" id="users-nav" hidden>Manage Users</button>
       </nav>
 
       <!-- Dashboard Section -->
@@ -107,6 +108,44 @@
               </tr>
             </thead>
             <tbody id="products-table">
+              <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- User Management Section (admins only) -->
+      <section id="users-section" class="section">
+        <div class="card">
+          <h2>Manage Users</h2>
+          <form id="user-form">
+            <div class="product-form">
+              <div class="form-group">
+                <label for="new-username">Username</label>
+                <input type="text" id="new-username" maxlength="32" pattern="[a-zA-Z0-9_.-]+" required>
+              </div>
+              <div class="form-group">
+                <label for="new-password">Password (at least 8 characters)</label>
+                <input type="password" id="new-password" minlength="8" required>
+              </div>
+              <div class="form-group">
+                <label for="new-role">Account type</label>
+                <select id="new-role" required>
+                  <option value="cashier">Cashier</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="form-group" style="align-self: end;">
+                <button type="submit" class="btn btn-success">Create Account</button>
+              </div>
+            </div>
+          </form>
+          <h3 style="margin: 20px 0 10px;">Existing Accounts</h3>
+          <table>
+            <thead>
+              <tr><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
+            </thead>
+            <tbody id="users-table">
               <tr><td colspan="4">Loading...</td></tr>
             </tbody>
           </table>

@@ -3,6 +3,7 @@ const API_BASE = 'http://localhost:3000/api';
 
 // State
 let currentUser = null;
+let authToken = sessionStorage.getItem('token');
 let cart = [];
 let allProducts = [];
 
@@ -47,6 +48,8 @@ function setupEventListeners() {
   document.getElementById('add-to-cart-btn')?.addEventListener('click', addToCart);
   document.getElementById('complete-sale-btn')?.addEventListener('click', completeSale);
   document.getElementById('refresh-sales-history')?.addEventListener('click', loadSalesHistory);
+  document.getElementById('user-form')?.addEventListener('submit', createUser);
+  document.getElementById('users-table')?.addEventListener('click', handleUserTableClick);
 
   // Close modals
   document.querySelectorAll('.close-btn').forEach((btn) => {
@@ -76,6 +79,8 @@ function handleLogin(e) {
     .then((data) => {
       if (data.success) {
         currentUser = data.user;
+        authToken = data.token;
+        sessionStorage.setItem('token', authToken);
         sessionStorage.setItem('user', JSON.stringify(currentUser));
         showApp();
         showAlert(`Welcome, ${currentUser.username}!`, 'success');
@@ -90,7 +95,15 @@ function handleLogin(e) {
 }
 
 function handleLogout() {
+  if (authToken) {
+    fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      headers: authHeaders()
+    }).catch((err) => console.error('Logout error:', err));
+  }
   currentUser = null;
+  authToken = null;
+  sessionStorage.removeItem('token');
   sessionStorage.removeItem('user');
   cart = [];
   showLogin();
@@ -99,13 +112,27 @@ function handleLogout() {
 }
 
 function checkSession() {
-  const savedUser = sessionStorage.getItem('user');
-  if (savedUser) {
-    currentUser = JSON.parse(savedUser);
-    showApp();
-  } else {
+  if (!authToken) {
     showLogin();
+    return;
   }
+
+  fetch(`${API_BASE}/auth/me`, { headers: authHeaders() })
+    .then((res) => {
+      if (!res.ok) throw new Error('Session expired');
+      return res.json();
+    })
+    .then((data) => {
+      currentUser = data.user;
+      sessionStorage.setItem('user', JSON.stringify(currentUser));
+      showApp();
+    })
+    .catch(() => {
+      authToken = null;
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      showLogin();
+    });
 }
 
 function showLogin() {
@@ -117,11 +144,16 @@ function showApp() {
   loginSection.style.display = 'none';
   appSection.style.display = 'block';
   currentUserSpan.textContent = `${currentUser.username} (${currentUser.role})`;
+  document.getElementById('users-nav').hidden = currentUser.role !== 'admin';
   navigateToSection('dashboard');
 }
 
 // Navigation
 function navigateToSection(sectionId) {
+  if (sectionId === 'users' && currentUser?.role !== 'admin') {
+    return;
+  }
+
   sections.forEach((section) => {
     section.classList.remove('active');
   });
@@ -146,8 +178,108 @@ function navigateToSection(sectionId) {
       clearCart();
     } else if (sectionId === 'history') {
       loadSalesHistory();
+    } else if (sectionId === 'users') {
+      loadUsers();
     }
   }
+}
+
+function authHeaders() {
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+}
+
+function loadUsers() {
+  fetch(`${API_BASE}/users`, { headers: authHeaders() })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load accounts');
+      return data;
+    })
+    .then((users) => {
+      const tbody = document.getElementById('users-table');
+      tbody.replaceChildren();
+      if (users.length === 0) {
+        const row = tbody.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 4;
+        cell.textContent = 'No accounts';
+        return;
+      }
+
+      users.forEach((user) => {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = user.username;
+        row.insertCell().textContent = user.role;
+        row.insertCell().textContent = new Date(user.created_at).toLocaleDateString();
+        const actionCell = row.insertCell();
+        if (user.id === currentUser.id) {
+          actionCell.textContent = 'Current account';
+        } else {
+          const button = document.createElement('button');
+          button.className = 'btn btn-danger';
+          button.textContent = 'Delete';
+          button.dataset.userId = user.id;
+          actionCell.appendChild(button);
+        }
+      });
+    })
+    .catch((err) => {
+      console.error('Users error:', err);
+      showAlert(err.message, 'error');
+    });
+}
+
+function createUser(event) {
+  event.preventDefault();
+  const username = document.getElementById('new-username').value.trim();
+  const password = document.getElementById('new-password').value;
+  const role = document.getElementById('new-role').value;
+
+  fetch(`${API_BASE}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ username, password, role })
+  })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create account');
+      return data;
+    })
+    .then(() => {
+      document.getElementById('user-form').reset();
+      showAlert(`Account "${username}" created`, 'success');
+      loadUsers();
+    })
+    .catch((err) => {
+      console.error('Create account error:', err);
+      showAlert(err.message, 'error');
+    });
+}
+
+function handleUserTableClick(event) {
+  const button = event.target.closest('button[data-user-id]');
+  if (!button) return;
+
+  const userId = button.dataset.userId;
+  if (!window.confirm('Delete this account? This cannot be undone.')) return;
+
+  fetch(`${API_BASE}/users/${userId}`, {
+    method: 'DELETE',
+    headers: authHeaders()
+  })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete account');
+      return data;
+    })
+    .then(() => {
+      showAlert('Account deleted', 'success');
+      loadUsers();
+    })
+    .catch((err) => {
+      console.error('Delete account error:', err);
+      showAlert(err.message, 'error');
+    });
 }
 
 // Dashboard

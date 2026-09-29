@@ -5,6 +5,7 @@ A lightweight, full-stack Point of Sale (POS) system built for small retail shop
 ## Features
 
 ✅ **Authentication** - Admin and cashier login with role-based access  
+✅ **User Management** - Admins can create and delete admin/cashier accounts
 ✅ **Product Management** - Add, edit, and view products with prices and stock  
 ✅ **Sales Module** - Search products, add to cart, calculate totals and change  
 ✅ **Stock Management** - Automatic stock reduction after sales, prevent out-of-stock sales  
@@ -18,6 +19,7 @@ simple-pos/
 ├── backend/                    # Node.js/Express API
 │   ├── routes/                # API route handlers
 │   │   ├── auth.js           # Login endpoint
+│   │   ├── users.js          # Admin-only account management
 │   │   ├── products.js       # Product CRUD operations
 │   │   ├── sales.js          # Sales transaction handling
 │   │   └── dashboard.js      # Dashboard statistics
@@ -108,6 +110,12 @@ http://localhost:3000
 - View all past transactions
 - Click "View" to see detailed breakdown of each sale
 
+### User Management (admins only)
+- Use the **Manage Users** tab to create admin or cashier accounts
+- Usernames may contain letters, numbers, dots, underscores, and hyphens
+- Passwords must be at least 8 characters
+- Accounts with sales history, the signed-in admin, and the last admin cannot be deleted
+
 ## Database Schema
 
 ### Users Table
@@ -142,6 +150,13 @@ http://localhost:3000
 
 ### Authentication
 - `POST /api/auth/login` - Login user
+- `GET /api/auth/me` - Get the signed-in user (requires bearer token)
+- `POST /api/auth/logout` - End the current session (requires bearer token)
+
+### User Management (admin bearer token required)
+- `GET /api/users` - List accounts
+- `POST /api/users` - Create an admin or cashier (`username`, `password`, `role`)
+- `DELETE /api/users/:id` - Delete an account, subject to account safety checks
 
 ### Products
 - `GET /api/products` - Get all products

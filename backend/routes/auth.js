@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcryptjs');
+const { createSession, revokeSession, requireAuth } = require('../middleware/auth');
 
 // Login route
 router.post('/login', (req, res) => {
@@ -29,6 +30,7 @@ router.post('/login', (req, res) => {
 
       res.json({
         success: true,
+        token: createSession(user.id),
         user: {
           id: user.id,
           username: user.username,
@@ -37,6 +39,15 @@ router.post('/login', (req, res) => {
       });
     }
   );
+});
+
+router.get('/me', requireAuth, (req, res) => {
+  res.json({ user: req.user });
+});
+
+router.post('/logout', requireAuth, (req, res) => {
+  revokeSession(req.sessionToken);
+  res.json({ success: true });
 });
 
 module.exports = router;
